@@ -2,13 +2,12 @@ package com.example.myapplication.nadutkin
 
 import android.app.Application
 import android.content.Context
-import android.content.Intent
 import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
-import androidx.core.app.ActivityCompat.startActivityForResult
+import com.example.myapplication.nadutkin.adapter.Video
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
@@ -22,8 +21,10 @@ class DownloadApplication : Application() {
     companion object {
         lateinit var instance: DownloadApplication
             private set
-        val PickFromGallery = 228
+        const val PickFromGallery = 228
     }
+
+    val uploads = mutableListOf<Video>()
 
     private var client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(160, TimeUnit.SECONDS)
@@ -52,7 +53,7 @@ class DownloadApplication : Application() {
         return result
     }
 
-    fun handleSuccess(link: String, videoPath: String) {
+    fun handleSuccess(link: String, videoPath: String, videoName: String) {
         Log.i("Link", link)
         val videoFile = File(videoPath)
         val requestBody: RequestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
@@ -72,6 +73,7 @@ class DownloadApplication : Application() {
             }
 
             override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                uploads.add(Video(videoName))
                 Log.i("Success", "success")
             }
         })

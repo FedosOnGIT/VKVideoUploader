@@ -1,15 +1,14 @@
 package com.example.myapplication.nadutkin
 
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.database.Cursor
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.util.Log
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
@@ -27,11 +26,13 @@ import okhttp3.*
 
 
 class MainActivity : AppCompatActivity() {
+    private lateinit var editName: EditText
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         login()
+        editName = findViewById(R.id.edit_name)
         val upload: Button = findViewById(R.id.upload_button)
         upload.setOnClickListener {
             //val myId = VK.getUserId()
@@ -49,10 +50,17 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        val uploadsListButton: Button = findViewById(R.id.show_list_button)
+        uploadsListButton.setOnClickListener {
+            startActivity(Intent(this, UploadsActivity::class.java))
+        }
         val logout: Button = findViewById(R.id.logout_button)
         logout.setOnClickListener {
             Toast.makeText(this, "End of the session", Toast.LENGTH_LONG).show()
             logout()
+        }
+        if (savedInstanceState != null) {
+            editName.setText(savedInstanceState.getString("editName"))
         }
     }
 
@@ -89,7 +97,16 @@ class MainActivity : AppCompatActivity() {
                     Toast.makeText(this, "Let's upload videos!", Toast.LENGTH_LONG).show()
                     getVideo()
                 } else {
-                    Toast.makeText(this, "An application needs the permission to upload videos", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this,
+                        "An application needs the permission to upload videos",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    Toast.makeText(
+                        this,
+                        "An application needs the permission to upload videos",
+                        Toast.LENGTH_LONG
+                    ).show()
                 }
                 return
             }
@@ -123,26 +140,35 @@ class MainActivity : AppCompatActivity() {
             val videoPath = instance.getPath(this.applicationContext, selectedImageUri)
             Log.i("videoPath", videoPath)
             VideoService().videoSave(
-                "kek",
-                "blabla bla",
+                editName.text.toString(),
+                "",
                 isPrivate = false,
                 wallpost = true,
                 compression = false
             ).also {
                 VK.execute(it, object : VKApiCallback<VideoSaveResult> {
                     override fun fail(error: Exception) {
-                        Toast.makeText(this@MainActivity, "Failed to get a link", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this@MainActivity, "Failed to get a link", Toast.LENGTH_LONG)
+                            .show()
                     }
 
                     override fun success(result: VideoSaveResult) {
-                        result.uploadUrl?.let { it1 -> instance.handleSuccess(it1, videoPath) }
+                        result.uploadUrl?.let { it1 ->
+                            instance.handleSuccess(
+                                it1,
+                                videoPath,
+                                editName.text.toString()
+                            )
+                            editName.text.clear()
+                        }
                     }
                 })
             }
         }
     }
 
-
-
-
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString("editName", editName.toString())
+    }
 }
