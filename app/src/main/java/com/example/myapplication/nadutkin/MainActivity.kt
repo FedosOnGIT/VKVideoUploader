@@ -31,9 +31,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        if (!VK.isLoggedIn()) {
-            VK.login(this, arrayListOf(VKScope.WALL, VKScope.PHOTOS, VKScope.VIDEO))
-        }
+        login()
         val upload: Button = findViewById(R.id.upload_button)
         upload.setOnClickListener {
             //val myId = VK.getUserId()
@@ -51,10 +49,22 @@ class MainActivity : AppCompatActivity() {
                 )
             }
         }
+        val logout: Button = findViewById(R.id.logout_button)
+        logout.setOnClickListener {
+            Toast.makeText(this, "End of the session", Toast.LENGTH_LONG).show()
+            logout()
+        }
+    }
+
+    private fun login() {
+        if (!VK.isLoggedIn()) {
+            VK.login(this, arrayListOf(VKScope.WALL, VKScope.PHOTOS, VKScope.VIDEO))
+        }
     }
 
     private fun logout() {
         VK.logout()
+        login()
     }
 
     private fun getVideo() {
@@ -76,10 +86,10 @@ class MainActivity : AppCompatActivity() {
                 if (grantResults.isNotEmpty()
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED
                 ) {
-                    Toast.makeText(this, "Let's upload videos!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "Let's upload videos!", Toast.LENGTH_LONG).show()
                     getVideo()
                 } else {
-                    Toast.makeText(this, "An application needs the permission to upload videos", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this, "An application needs the permission to upload videos", Toast.LENGTH_LONG).show()
                 }
                 return
             }
@@ -92,15 +102,15 @@ class MainActivity : AppCompatActivity() {
                 Toast.makeText(
                     this@MainActivity,
                     "Authorisation Succeed",
-                    Toast.LENGTH_SHORT
+                    Toast.LENGTH_LONG
                 ).show()
             }
 
             override fun onLoginFailed(errorCode: Int) {
                 Toast.makeText(
                     this@MainActivity,
-                    "Authorisation Failed",
-                    Toast.LENGTH_SHORT
+                    "Authorisation Failed, Error code: $errorCode",
+                    Toast.LENGTH_LONG
                 ).show()
                 logout()
             }
