@@ -13,8 +13,13 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.OnLifecycleEvent
 import com.example.myapplication.nadutkin.DownloadApplication.Companion.PickFromGallery
+import com.example.myapplication.nadutkin.DownloadApplication.Companion.fold
 import com.example.myapplication.nadutkin.DownloadApplication.Companion.instance
+import com.example.myapplication.nadutkin.DownloadApplication.Companion.side
+import com.example.myapplication.nadutkin.DownloadApplication.Companion.withoutBlocking
 import com.vk.api.sdk.VK
 import com.vk.api.sdk.VKApiCallback
 import com.vk.api.sdk.auth.VKAccessToken
@@ -36,6 +41,7 @@ class MainActivity : AppCompatActivity() {
         val upload: Button = findViewById(R.id.upload_button)
         upload.setOnClickListener {
             //val myId = VK.getUserId()
+            side = true
             val permissionStatus = ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -52,12 +58,23 @@ class MainActivity : AppCompatActivity() {
         }
         val uploadsListButton: Button = findViewById(R.id.show_list_button)
         uploadsListButton.setOnClickListener {
+            side = true
             startActivity(Intent(this, UploadsActivity::class.java))
         }
         val logout: Button = findViewById(R.id.logout_button)
         logout.setOnClickListener {
             Toast.makeText(this, "End of the session", Toast.LENGTH_LONG).show()
             logout()
+        }
+        val normal: Button = findViewById(R.id.normal_mode)
+        normal.setOnClickListener {
+            Toast.makeText(this, "Unblocking mode on", Toast.LENGTH_LONG).show()
+            withoutBlocking = true
+        }
+        val blocking: Button = findViewById(R.id.blocking_mode)
+        blocking.setOnClickListener {
+            Toast.makeText(this, "Blocking mode on", Toast.LENGTH_LONG).show()
+            withoutBlocking = false
         }
         if (savedInstanceState != null) {
             editName.setText(savedInstanceState.getString("editName"))
@@ -163,6 +180,27 @@ class MainActivity : AppCompatActivity() {
                         }
                     }
                 })
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (!withoutBlocking) {
+            side = false
+            if (fold) {
+                fold = false
+                instance.resume()
+            }
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        if (!withoutBlocking) {
+            if (!side) {
+                fold = true
+                instance.pause()
             }
         }
     }

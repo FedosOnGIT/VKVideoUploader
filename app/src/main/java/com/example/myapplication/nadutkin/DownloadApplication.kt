@@ -8,11 +8,8 @@ import android.provider.MediaStore
 import android.util.Log
 import android.widget.Toast
 import com.example.myapplication.nadutkin.adapter.Video
+import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.MultipartBody
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody
 import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
@@ -22,9 +19,16 @@ class DownloadApplication : Application() {
         lateinit var instance: DownloadApplication
             private set
         const val PickFromGallery = 228
+        var fold: Boolean = false
+        var side: Boolean = false
+        var withoutBlocking: Boolean = true
     }
 
     val uploads = mutableListOf<Video>()
+    private lateinit var call: Call
+    private lateinit var pauseLink: String
+    private lateinit var pauseVideoPath: String
+    private lateinit var pauseVideoName: String
 
     private var client: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(160, TimeUnit.SECONDS)
@@ -53,8 +57,20 @@ class DownloadApplication : Application() {
         return result
     }
 
+
+    fun pause() {
+        call.cancel()
+    }
+
+    fun resume() {
+        handleSuccess(pauseLink, pauseVideoPath, pauseVideoName)
+    }
+
     fun handleSuccess(link: String, videoPath: String, videoName: String) {
         Log.i("Link", link)
+        pauseLink = link
+        pauseVideoPath = videoPath
+        pauseVideoName = videoName
         val videoFile = File(videoPath)
         val requestBody: RequestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
             .addFormDataPart(
@@ -66,7 +82,8 @@ class DownloadApplication : Application() {
             .url(link)
             .post(requestBody)
             .build()
-        client.newCall(request).enqueue(object : okhttp3.Callback {
+        call = client.newCall(request)
+        call.enqueue(object : okhttp3.Callback {
             override fun onFailure(call: okhttp3.Call, e: IOException) {
                 Log.i("Mistake", e.message!!)
                 Log.i("Mistake", e.stackTraceToString())

@@ -5,5 +5,7 @@
     <string name="get">Get</string>
     <string name="replace">replace</string>
     <string name="enter_video_name">Enter video name</string>
+    <string name="normal_mode">Normal Mode</string>
+    <string name="blocking_mode">Blocking mode</string>
     <integer name="com_vk_sdk_AppId">7886347</integer>
 </resources>
